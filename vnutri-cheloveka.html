@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Внутри человека</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: липкая тёмная схема тела слева, атлас или экзамен справа; на телефоне колонки встают друг под друга */
+:root{
+  --bg:#0a121d; --stage:#0c1623; --surface:#101c2b; --surface2:#16273c; --line:#23384f;
+  --fg:#efe7da; --muted:#9fb0c3; --accent:#ee5a6b; --ok:#4fd1a0; --bad:#ff6b6b;
+  --sys-nerv:#f2c14e; --sys-resp:#5fc4e8; --sys-circ:#ef476f; --sys-dig:#f78c4f; --sys-exc:#a58bff; --sys-imm:#4fd1a0;
+  --font-display:'Cormorant Garamond', Georgia, serif;
+  --font-body:'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0;
+  background:radial-gradient(900px 520px at 22% 6%, rgba(60,110,160,.20), transparent 62%), radial-gradient(720px 520px at 92% 82%, rgba(190,60,95,.11), transparent 62%), var(--bg);
+  color:var(--fg);
+  font:15px/1.55 var(--font-body);
+  padding-block:20px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.organ:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.app{max-width:1180px;margin:0 auto}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px}
+h1{font:700 clamp(32px,5vw,46px)/1 var(--font-display);margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 em{font-style:italic;font-weight:600;color:var(--accent)}
+.sub{margin:8px 0 0;color:var(--muted);font-size:14px;max-width:48ch}
+.tabs{display:inline-flex;padding:4px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px}
+.tab{border:0;background:none;padding:9px 22px;border-radius:999px;color:var(--muted);font-weight:500}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+
+.main{display:grid;grid-template-columns:minmax(0,540px) minmax(0,1fr);gap:28px;margin-top:22px;align-items:start}
+@media (max-width:880px){
+  .main{grid-template-columns:minmax(0,1fr)}
+  .main.game .panel{order:-1}
+  .stage{position:relative !important;top:auto !important}
+}
+
+/* Сцена с телом */
+.stage{
+  position:sticky;top:16px;border:1px solid var(--line);border-radius:20px;overflow:hidden;padding:30px 4px 4px;
+  background:
+    radial-gradient(60% 52% at 50% 42%, rgba(79,163,199,.17), transparent 72%),
+    linear-gradient(rgba(120,170,210,.055) 1px, transparent 1px) 0 0/28px 28px,
+    linear-gradient(90deg, rgba(120,170,210,.055) 1px, transparent 1px) 0 0/28px 28px,
+    var(--stage);
+}
+.stage svg{display:block;width:100%;height:auto;max-height:calc(100svh - 90px);margin:0 auto}
+.cap{position:absolute;left:16px;top:13px;font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--muted);z-index:2}
+.vitals{position:absolute;left:16px;bottom:14px;display:flex;flex-direction:column;gap:4px;font:500 10.5px var(--font-mono);letter-spacing:.12em;color:var(--muted);z-index:2}
+.vitals b{font-weight:500;color:var(--fg);font-size:15px;margin-left:6px;font-variant-numeric:tabular-nums}
+.vitals .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--sys-circ);margin-right:8px;animation:blink .833s infinite}
+@keyframes blink{0%,100%{opacity:1}40%{opacity:.25}}
+
+.organ{cursor:pointer;outline:none;transition:opacity .3s, filter .25s}
+.organ:hover,.organ:focus-visible{filter:drop-shadow(0 0 7px var(--c)) brightness(1.18)}
+.organ.sel{filter:drop-shadow(0 0 10px var(--c)) brightness(1.25)}
+.organ.good{filter:drop-shadow(0 0 13px var(--ok)) brightness(1.3)}
+.organ.bad{animation:shake .4s}
+.organ.dim,.lab.dim{opacity:.16}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.solid{stroke:rgba(0,0,0,.4);stroke-width:1;stroke-linejoin:round}
+.tube{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fold{fill:none;stroke:rgba(110,30,60,.5);stroke-width:1.2;stroke-linecap:round}
+.vein{fill:none;stroke:rgba(255,255,255,.22);stroke-width:1;stroke-linecap:round}
+.ring{stroke:rgba(30,70,90,.55);stroke-width:1}
+.bone{fill:none;stroke:rgba(190,220,245,.17);stroke-width:2.2;stroke-linecap:round}
+.hit{fill:transparent;stroke:none}
+.hitline{fill:none;stroke:transparent;stroke-width:18;stroke-linecap:round;stroke-linejoin:round;pointer-events:stroke}
+.anim{transform-box:fill-box;transform-origin:center}
+.beat{animation:beat .833s infinite ease-in-out}
+@keyframes beat{0%,100%{transform:scale(1)}12%{transform:scale(1.07)}24%{transform:scale(.99)}36%{transform:scale(1.04)}55%{transform:scale(1)}}
+.breathe{animation:breathe 3.75s infinite ease-in-out}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035,1.02)}}
+.scan{animation:scan 7s linear infinite;pointer-events:none}
+@keyframes scan{from{transform:translateY(-40px)}to{transform:translateY(660px)}}
+.lab{cursor:pointer;transition:opacity .3s}
+.lab line{stroke:rgba(190,215,240,.38);stroke-dasharray:2 3;stroke-width:1}
+.lab circle{fill:var(--c)}
+.lab text{font:600 12.5px var(--font-body);fill:var(--fg);opacity:.85}
+.lab:hover text,.lab.sel text{fill:var(--c);opacity:1}
+.nolabels .lab{display:none}
+
+/* Панель */
+.panel{min-width:0;display:flex;flex-direction:column;gap:14px}
+.card{background:rgba(16,28,43,.8);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
+.lbl{font:500 10.5px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card p{margin:0 0 4px;max-width:62ch}
+.muted{color:var(--muted)}
+h2{font:700 clamp(30px,4vw,42px)/1.05 var(--font-display);margin:4px 0 0;text-wrap:balance}
+.lat{font:italic 600 19px var(--font-display);color:var(--muted);margin-bottom:16px}
+.tag-row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.tag{font:500 11px var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
+.tag i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px}
+.seen{font:500 11px var(--font-mono);letter-spacing:.1em;color:var(--ok)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.stat b{display:block;font:700 24px/1.1 var(--font-display);overflow-wrap:anywhere}
+.stat span{font:500 10.5px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.fact{background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px}
+.prog{display:flex;align-items:center;gap:12px;font:500 11px var(--font-mono);letter-spacing:.1em;color:var(--muted)}
+.bar{flex:1;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--sys-resp),var(--sys-imm));transition:width .4s}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;color:var(--muted)}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted))}
+.chip:hover{color:var(--fg);border-color:var(--muted)}
+.chip[aria-pressed="true"]{color:var(--fg);border-color:var(--c,var(--fg));background:var(--surface2)}
+.chip .ck{color:var(--ok);font-size:12px}
+
+/* Игра */
+.hud{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 24px}
+.lives{display:flex;gap:5px;margin-right:auto}
+.m{display:flex;flex-direction:column}
+.m span{font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--muted)}
+.m b{font:700 26px/1.05 var(--font-display);font-variant-numeric:tabular-nums}
+.timer{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--ok);transition:background .3s}
+.timer i.low{background:var(--bad)}
+.q{font:700 clamp(24px,3.4vw,31px)/1.2 var(--font-display);margin:2px 0 12px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+@media (max-width:520px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:flex;gap:12px;align-items:baseline;min-width:0}
+.opt kbd{font:500 11px var(--font-mono);color:var(--muted)}
+.opt span{overflow-wrap:anywhere}
+.opt:hover:not([disabled]){border-color:var(--muted);background:var(--surface2)}
+.opt[disabled]{cursor:default}
+.opt.ok{border-color:var(--ok);background:rgba(79,209,160,.15)}
+.opt.no{border-color:var(--bad);background:rgba(255,107,107,.14)}
+.opt.gone{opacity:.28}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:14px}
+.btn{padding:12px 22px;border-radius:12px;border:1px solid transparent;font-weight:600;background:var(--accent);color:#1a0a0e}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--fg)}
+.btn[disabled]{opacity:.4;cursor:default}
+.fb{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.fb.ok{border-color:rgba(79,209,160,.55)}
+.fb.no{border-color:rgba(255,107,107,.55)}
+.rank{font:700 clamp(34px,6vw,52px)/1 var(--font-display);margin:4px 0 6px}
+.rank em{font-style:italic;color:var(--accent)}
+.best{font:500 12px var(--font-mono);letter-spacing:.1em;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){
+  .beat,.breathe,.scan,.vitals .dot,.organ.bad{animation:none}
+  .scan{display:none}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>Внутри <em>человека</em></h1>
+      <p class="sub">Изучайте органы на схеме тела, а потом проверьте себя на экзамене.</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Режим">
+      <button class="tab" role="tab" id="tab-atlas" aria-selected="true">Атлас</button>
+      <button class="tab" role="tab" id="tab-game" aria-selected="false">Игра</button>
+    </div>
+  </header>
+
+  <main class="main" id="main">
+    <section class="stage" id="stage" aria-label="Схема человеческого тела">
+      <div class="cap">ВИД СПЕРЕДИ · ВНУТРЕННИЕ ОРГАНЫ</div>
+      <div class="vitals"><div><i class="dot"></i>ПУЛЬС<b>72</b></div><div>ДЫХАНИЕ<b>16</b></div></div>
+
+      <svg id="body" viewBox="0 0 540 650" role="group" aria-label="Схема тела с органами">
+        <defs>
+          <linearGradient id="skin" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="640"><stop offset="0" stop-color="#21395a"/><stop offset="1" stop-color="#0f1c30"/></linearGradient>
+          <linearGradient id="scanG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc4e8" stop-opacity="0"/><stop offset=".7" stop-color="#5fc4e8" stop-opacity=".2"/><stop offset="1" stop-color="#9fe3f5" stop-opacity=".5"/></linearGradient>
+          <radialGradient id="g-brain" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#f6c6d0"/><stop offset="1" stop-color="#a95a74"/></radialGradient>
+          <radialGradient id="g-lung" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#f7b9c1"/><stop offset="1" stop-color="#b25a6a"/></radialGradient>
+          <radialGradient id="g-heart" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#ff6a72"/><stop offset="1" stop-color="#8a1222"/></radialGradient>
+          <radialGradient id="g-liver" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#c0583f"/><stop offset="1" stop-color="#561a13"/></radialGradient>
+          <radialGradient id="g-stom" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#f8b3a2"/><stop offset="1" stop-color="#b45a49"/></radialGradient>
+          <radialGradient id="g-sple" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#b9508a"/><stop offset="1" stop-color="#4f1d3b"/></radialGradient>
+          <radialGradient id="g-panc" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#f6d88b"/><stop offset="1" stop-color="#b9842f"/></radialGradient>
+          <radialGradient id="g-kid" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#cf6a5c"/><stop offset="1" stop-color="#65201e"/></radialGradient>
+          <radialGradient id="g-blad" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="#f7dc8e"/><stop offset="1" stop-color="#ad802c"/></radialGradient>
+          <linearGradient id="g-trach" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6aa5bd"/><stop offset=".5" stop-color="#cdeaf4"/><stop offset="1" stop-color="#6aa5bd"/></linearGradient>
+
+          <path id="sil" d="M136,80 L136,98 C118,100 96,104 90,118 C86,150 94,200 100,250 C104,290 98,320 92,358 C88,410 96,480 98,540 C100,590 100,610 104,630 L134,632 C136,600 138,540 142,480 C146,440 148,410 150,392 C152,410 154,440 158,480 C162,540 164,600 166,632 L196,630 C200,610 200,590 202,540 C204,480 212,410 208,358 C202,320 196,290 200,250 C206,200 214,150 210,118 C204,104 182,100 164,98 L164,80 Z"/>
+          <path id="armL" d="M94,108 C78,110 66,124 62,150 C56,200 48,262 42,322 C40,338 54,344 59,331 C68,282 80,222 92,176 C96,156 98,136 98,122 Z"/>
+          <clipPath id="bodyclip">
+            <use href="#sil"/><use href="#armL"/><use href="#armL" transform="translate(300 0) scale(-1 1)"/><ellipse cx="150" cy="50" rx="26" ry="32"/>
+          </clipPath>
+        </defs>
+
+        <g transform="translate(140 0)">
+          <!-- силуэт -->
+          <g style="filter:drop-shadow(0 0 10px rgba(79,163,199,.35))">
+            <g fill="#21395a" stroke="#4fa3c7" stroke-width="3" stroke-opacity=".75" stroke-linejoin="round">
+              <use href="#sil"/><use href="#armL"/><use href="#armL" transform="translate(300 0) scale(-1 1)"/><ellipse cx="150" cy="50" rx="26" ry="32"/>
+            </g>
+          </g>
+          <g fill="url(#skin)">
+            <use href="#sil"/><use href="#armL"/><use href="#armL" transform="translate(300 0) scale(-1 1)"/><ellipse cx="150" cy="50" rx="26" ry="32"/>
+          </g>
+
+          <!-- скелет-подложка -->
+          <g id="bones" aria-hidden="true">
+            <path class="bone" d="M150,96 L150,350" stroke-dasharray="2 5"/>
+            <path class="bone" d="M150,106 L110,112 M150,106 L190,112"/>
+            <path class="bone" d="M102,336 C100,366 122,388 150,382 C178,388 200,366 198,336"/>
+          </g>
+
+          <!-- органы: сначала нижние слои -->
+          <g class="organ" data-id="kidneys" style="--c:#cf6a5c" tabindex="0" role="button" aria-label="Почки">
+            <path class="solid" fill="url(#g-kid)" d="M122,256 C132,254 136,268 132,282 C130,292 120,292 116,284 C122,278 122,270 116,264 C115,258 118,256 122,256 Z"/>
+            <path class="solid" fill="url(#g-kid)" d="M178,256 C168,254 164,268 168,282 C170,292 180,292 184,284 C178,278 178,270 184,264 C185,258 182,256 178,256 Z"/>
+          </g>
+          <g class="organ" data-id="pancreas" style="--c:#f6d88b" tabindex="0" role="button" aria-label="Поджелудочная железа">
+            <path class="solid" fill="url(#g-panc)" d="M128,274 C140,266 164,266 184,272 C186,278 178,282 166,280 C150,278 138,284 130,282 C126,280 126,277 128,274 Z"/>
+          </g>
+          <g class="organ" data-id="spleen" style="--c:#b9508a" tabindex="0" role="button" aria-label="Селезёнка">
+            <path class="solid" fill="url(#g-sple)" d="M190,226 C199,226 200,240 196,250 C192,252 189,244 190,236 Z"/>
+          </g>
+          <g class="organ" data-id="liver" style="--c:#c0583f" tabindex="0" role="button" aria-label="Печень">
+            <path class="solid" fill="url(#g-liver)" d="M112,218 C128,212 156,212 176,220 C178,236 168,252 150,258 C134,262 118,256 112,244 C108,236 108,226 112,218 Z"/>
+            <path class="fold" d="M152,215 C148,230 150,244 146,258"/>
+          </g>
+          <g class="organ" data-id="stomach" style="--c:#f8b3a2" tabindex="0" role="button" aria-label="Желудок">
+            <path class="solid" fill="url(#g-stom)" d="M156,224 C170,220 186,226 188,240 C190,256 178,268 164,266 C156,264 154,256 158,250 C160,244 150,238 152,230 Z"/>
+            <path class="fold" d="M166,232 C176,234 182,242 180,254"/>
+          </g>
+          <g class="organ" data-id="small" style="--c:#f2b690" tabindex="0" role="button" aria-label="Тонкая кишка">
+            <rect class="hit" x="122" y="298" width="56" height="50"/>
+            <path class="tube" stroke="#b86a4c" stroke-width="9" d="M128,306 C138,301 148,308 158,303 C168,299 172,308 166,312 C156,317 142,312 132,318 C124,322 126,332 136,330 C146,328 158,332 168,328 C174,332 172,340 162,342 C150,344 138,340 130,343"/>
+            <path class="tube" stroke="#f2b690" stroke-width="6" d="M128,306 C138,301 148,308 158,303 C168,299 172,308 166,312 C156,317 142,312 132,318 C124,322 126,332 136,330 C146,328 158,332 168,328 C174,332 172,340 162,342 C150,344 138,340 130,343"/>
+          </g>
+          <g class="organ" data-id="large" style="--c:#dc9a68" tabindex="0" role="button" aria-label="Толстая кишка">
+            <path class="hitline" d="M118,342 L116,302 Q116,292 126,292 L174,292 Q184,292 184,302 L184,338 C184,350 170,354 162,348 C154,344 150,350 150,356"/>
+            <path class="tube" stroke="#a55a38" stroke-width="11" d="M118,342 L116,302 Q116,292 126,292 L174,292 Q184,292 184,302 L184,338 C184,350 170,354 162,348 C154,344 150,350 150,356"/>
+            <path class="tube" stroke="#dc9a68" stroke-width="8" d="M118,342 L116,302 Q116,292 126,292 L174,292 Q184,292 184,302 L184,338 C184,350 170,354 162,348 C154,344 150,350 150,356"/>
+          </g>
+          <g class="organ" data-id="bladder" style="--c:#f7dc8e" tabindex="0" role="button" aria-label="Мочевой пузырь">
+            <path class="solid" fill="url(#g-blad)" d="M141,364 C146,360 154,360 159,364 C163,372 159,384 150,386 C141,384 137,372 141,364 Z"/>
+          </g>
+
+          <!-- грудная клетка -->
+          <g class="organ" data-id="lungs" style="--c:#f7b9c1" tabindex="0" role="button" aria-label="Лёгкие">
+            <g class="anim breathe">
+              <path class="solid" fill="url(#g-lung)" d="M146,114 C132,112 116,124 110,150 C104,180 106,208 116,214 C130,218 144,210 146,196 Z"/>
+              <path class="solid" fill="url(#g-lung)" d="M154,114 C170,112 184,124 190,150 C195,180 194,206 184,212 C170,216 160,208 158,196 C162,186 164,172 160,160 C156,148 154,134 154,114 Z"/>
+              <path class="vein" d="M146,124 C136,132 126,142 118,156 M138,134 C132,150 128,168 124,190 M132,142 C124,146 118,150 114,158"/>
+              <path class="vein" d="M154,124 C164,132 174,142 182,156 M162,134 C168,150 172,170 174,190"/>
+            </g>
+          </g>
+          <g class="organ" data-id="esoph" style="--c:#e8998a" tabindex="0" role="button" aria-label="Пищевод">
+            <path class="hitline" style="stroke-width:14" d="M153,100 C155,150 154,190 157,226"/>
+            <path class="tube" stroke="#6b2f2a" stroke-width="8" d="M153,100 C155,150 154,190 157,226"/>
+            <path class="tube" stroke="#e8998a" stroke-width="5.5" d="M153,100 C155,150 154,190 157,226"/>
+          </g>
+          <g class="organ" data-id="trachea" style="--c:#bfe3ef" tabindex="0" role="button" aria-label="Трахея">
+            <path class="tube" stroke="#7fb6cb" stroke-width="3.5" d="M150,122 C146,130 140,134 130,142"/>
+            <path class="tube" stroke="#7fb6cb" stroke-width="3.5" d="M150,122 C154,130 160,134 170,142"/>
+            <path class="solid" fill="url(#g-trach)" d="M146,84 L154,84 L154,122 L146,122 Z"/>
+            <path class="ring" d="M146,90 L154,90 M146,95 L154,95 M146,100 L154,100 M146,105 L154,105 M146,110 L154,110 M146,115 L154,115"/>
+          </g>
+          <g class="organ" data-id="heart" style="--c:#ff6a72" tabindex="0" role="button" aria-label="Сердце">
+            <g class="anim beat">
+              <path class="tube" stroke="#e64a5b" stroke-width="6" d="M163,136 C162,124 172,120 178,128 C182,134 180,142 180,148"/>
+              <path class="solid" fill="url(#g-heart)" d="M152,142 C152,134 162,132 166,138 C170,132 180,134 180,144 C181,160 172,178 166,192 C160,182 148,170 146,156 C146,148 148,144 152,142 Z"/>
+              <path class="vein" d="M154,146 C156,142 160,141 163,143"/>
+            </g>
+          </g>
+
+          <!-- мозг -->
+          <g class="organ" data-id="brain" style="--c:#e98aa6" tabindex="0" role="button" aria-label="Головной мозг">
+            <path class="solid" fill="url(#g-brain)" d="M128,44 C126,28 138,20 152,20 C168,20 176,30 172,44 C172,54 164,58 152,57 C140,58 128,54 128,44 Z"/>
+            <path class="fold" d="M134,40 C140,34 144,42 150,36 C156,30 160,38 166,33"/>
+            <path class="fold" d="M133,48 C140,44 146,50 152,45 C158,40 164,48 168,44"/>
+            <path class="fold" d="M151,22 C148,32 152,42 150,56"/>
+          </g>
+
+          <!-- сканирующая линия -->
+          <g clip-path="url(#bodyclip)" aria-hidden="true"><rect class="scan" x="0" y="0" width="300" height="36" fill="url(#scanG)"/></g>
+
+          <!-- подписи -->
+          <g id="labels"></g>
+        </g>
+      </svg>
+    </section>
+
+    <section class="panel" id="panel" aria-live="polite"></section>
+  </main>
+</div>
+
+<script>
+(function(){
+  var $ = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var store = {
+    get: function(k, d){ try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+    set: function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  };
+
+  var SYS = {
+    nerv:{name:'Нервная', color:'var(--sys-nerv)'},
+    resp:{name:'Дыхательная', color:'var(--sys-resp)'},
+    circ:{name:'Кровеносная', color:'var(--sys-circ)'},
+    dig:{name:'Пищеварительная', color:'var(--sys-dig)'},
+    exc:{name:'Выделительная', color:'var(--sys-exc)'},
+    imm:{name:'Иммунная', color:'var(--sys-imm)'}
+  };
+
+  var ORGANS = [
+    {id:'brain', name:'Головной мозг', lat:'Cerebrum', sys:'nerv', color:'#e98aa6', anchor:[160,38], side:'L', ly:34,
+     clue:'управляет мыслями, памятью и движениями',
+     fn:'Центр управления организмом. Обрабатывает сигналы от органов чувств, хранит память, управляет движениями, речью и эмоциями.',
+     fact:'Мозг весит около 2 % массы тела, но потребляет примерно 20 % всей энергии и кислорода.',
+     stats:[['Масса','≈ 1,4 кг'],['Нейронов','≈ 86 млрд']],
+     qa:{q:'Какую долю энергии организма потребляет мозг?', a:'Около 20 %', w:['Около 2 %','Около 50 %','Около 80 %']}},
+    {id:'trachea', name:'Трахея', lat:'Trachea', sys:'resp', color:'#bfe3ef', anchor:[150,104], side:'R', ly:90,
+     clue:'проводит воздух к бронхам и держит форму благодаря хрящевым кольцам',
+     fn:'Дыхательная трубка, по которой воздух идёт от гортани к бронхам. Стенку удерживают незамкнутые хрящевые кольца, поэтому трубка не спадается.',
+     fact:'Реснички на внутренней стенке непрерывно выталкивают слизь с пылью и микробами вверх, к горлу.',
+     stats:[['Длина','≈ 11 см'],['Хрящей','16–20']],
+     qa:{q:'Что выталкивает пыль и слизь из трахеи?', a:'Реснички эпителия', w:['Жёлчные кислоты','Лёгочные альвеолы','Мышцы диафрагмы']}},
+    {id:'lungs', name:'Лёгкие', lat:'Pulmones', sys:'resp', color:'#f7b9c1', anchor:[122,150], side:'L', ly:130,
+     clue:'насыщает кровь кислородом и состоит из миллионов альвеол',
+     fn:'Обмениваются газами с кровью: кислород из воздуха попадает в кровь, а углекислый газ выводится наружу.',
+     fact:'Правое лёгкое состоит из трёх долей, левое из двух: слева место занимает сердце.',
+     stats:[['Альвеол','≈ 300–500 млн'],['Вдохов в покое','12–20 / мин']],
+     qa:{q:'Сколько долей у правого лёгкого?', a:'Три', w:['Две','Четыре','Пять']}},
+    {id:'heart', name:'Сердце', lat:'Cor', sys:'circ', color:'#ff6a72', anchor:[164,160], side:'R', ly:146,
+     clue:'работает как насос, гоняя кровь по сосудам',
+     fn:'Мышечный насос из четырёх камер. Правая половина гонит кровь в лёгкие, левая — ко всем остальным органам.',
+     fact:'За сутки сердце сокращается около 100 000 раз и перекачивает примерно 7 000 литров крови.',
+     stats:[['Масса','≈ 300 г'],['Пульс в покое','60–80 уд/мин']],
+     qa:{q:'Сколько камер в человеческом сердце?', a:'Четыре', w:['Две','Три','Шесть']}},
+    {id:'esoph', name:'Пищевод', lat:'Oesophagus', sys:'dig', color:'#e8998a', anchor:[155,208], side:'R', ly:190,
+     clue:'доставляет пищу изо рта в желудок',
+     fn:'Мышечная трубка, которая волнообразными сокращениями проталкивает пищу из глотки в желудок.',
+     fact:'Пища движется благодаря перистальтике, поэтому глотать можно даже вниз головой.',
+     stats:[['Длина','≈ 25 см'],['Путь пищи','5–10 сек']],
+     qa:{q:'Какова длина пищевода взрослого человека?', a:'Около 25 см', w:['Около 5 см','Около 60 см','Около 1 м']}},
+    {id:'stomach', name:'Желудок', lat:'Ventriculus', sys:'dig', color:'#f8b3a2', anchor:[174,248], side:'R', ly:218,
+     clue:'переваривает пищу с помощью соляной кислоты',
+     fn:'Мешок из мышц, где пища смешивается с желудочным соком. Здесь начинается расщепление белков.',
+     fact:'Слизистая оболочка обновляется каждые несколько дней, иначе кислота растворила бы стенку желудка.',
+     stats:[['Объём','≈ 1–1,5 л'],['pH сока','1,5–3,5']],
+     qa:{q:'Какая кислота входит в состав желудочного сока?', a:'Соляная', w:['Серная','Уксусная','Лимонная']}},
+    {id:'liver', name:'Печень', lat:'Hepar', sys:'dig', color:'#c0583f', anchor:[130,238], side:'L', ly:214,
+     clue:'вырабатывает желчь и обезвреживает токсины',
+     fn:'Самая крупная железа организма: обезвреживает токсины, вырабатывает желчь для переваривания жиров, запасает глюкозу в виде гликогена.',
+     fact:'Печень умеет восстанавливаться: после удаления части органа ткань может отрасти заново.',
+     stats:[['Масса','≈ 1,5 кг'],['Желчи в сутки','≈ 0,6–1 л']],
+     qa:{q:'Какой орган вырабатывает желчь?', a:'Печень', w:['Поджелудочная железа','Селезёнка','Почки']}},
+    {id:'pancreas', name:'Поджелудочная железа', short:'Поджелудочная', lat:'Pancreas', sys:'dig', color:'#f6d88b', anchor:[140,276], side:'R', ly:268,
+     clue:'вырабатывает инсулин и пищеварительные ферменты',
+     fn:'Выделяет в кишку ферменты для расщепления белков, жиров и углеводов, а в кровь инсулин и глюкагон, которые регулируют уровень сахара.',
+     fact:'Гормоны вырабатывают скопления клеток, которые называются островками Лангерганса. Их около миллиона.',
+     stats:[['Длина','≈ 15 см'],['Масса','≈ 80 г']],
+     qa:{q:'Какой гормон вырабатывает поджелудочная железа?', a:'Инсулин', w:['Адреналин','Мелатонин','Тироксин']}},
+    {id:'spleen', name:'Селезёнка', lat:'Splen', sys:'imm', color:'#b9508a', anchor:[194,238], side:'R', ly:243,
+     clue:'разрушает старые эритроциты и входит в иммунную систему',
+     fn:'Фильтрует кровь, разрушает старые эритроциты и помогает иммунной системе распознавать микробы.',
+     fact:'Эритроцит живёт около 120 дней, после чего его в основном утилизирует селезёнка.',
+     stats:[['Размер','≈ 12 см'],['Масса','≈ 150 г']],
+     qa:{q:'Сколько в среднем живёт эритроцит?', a:'Около 120 дней', w:['Около 2 дней','Около 30 дней','Около 10 лет']}},
+    {id:'small', name:'Тонкая кишка', lat:'Intestinum tenue', sys:'dig', color:'#f2b690', anchor:[150,322], side:'R', ly:322,
+     clue:'всасывает основную часть питательных веществ',
+     fn:'Здесь переваривание завершается, и через стенки в кровь всасывается основная часть питательных веществ.',
+     fact:'Внутренняя стенка покрыта ворсинками, которые во много раз увеличивают площадь всасывания.',
+     stats:[['Длина','5–7 м'],['Отделов','3']],
+     qa:{q:'Какова длина тонкой кишки?', a:'5–7 м', w:['0,5–1 м','1,5 м','15–20 м']}},
+    {id:'large', name:'Толстая кишка', lat:'Intestinum crassum', sys:'dig', color:'#dc9a68', anchor:[117,322], side:'L', ly:316,
+     clue:'всасывает воду и формирует каловые массы',
+     fn:'Всасывает воду и соли, формирует каловые массы. Здесь живут триллионы полезных бактерий.',
+     fact:'Кишечные бактерии помогают переваривать клетчатку и вырабатывают часть витаминов групп B и K.',
+     stats:[['Длина','≈ 1,5 м'],['Бактерий','триллионы']],
+     qa:{q:'Что в основном всасывается в толстой кишке?', a:'Вода', w:['Белки','Жиры','Витамин C']}},
+    {id:'kidneys', name:'Почки', lat:'Renes', sys:'exc', color:'#cf6a5c', anchor:[125,266], side:'L', ly:264,
+     clue:'образует мочу, очищая кровь',
+     fn:'Фильтруют кровь, выводят лишнюю воду и продукты обмена с мочой, поддерживают баланс солей и давление.',
+     fact:'Каждая почка содержит около миллиона нефронов, то есть крошечных фильтров.',
+     stats:[['Размер','≈ 11 см'],['Первичной мочи','≈ 180 л / сут']],
+     qa:{q:'Сколько первичной мочи фильтруют почки за сутки?', a:'Около 180 л', w:['Около 1,5 л','Около 18 л','Около 1 800 л']}},
+    {id:'bladder', name:'Мочевой пузырь', lat:'Vesica urinaria', sys:'exc', color:'#f7dc8e', anchor:[150,376], side:'L', ly:372,
+     clue:'накапливает мочу до выхода из организма',
+     fn:'Эластичный мышечный мешок, где накапливается моча, пока не придёт время выйти из организма по мочеиспускательному каналу.',
+     fact:'Первый позыв появляется при наполнении примерно на 200–300 мл, а вмещает пузырь 300–500 мл.',
+     stats:[['Объём','300–500 мл'],['Первый позыв','≈ 250 мл']],
+     qa:{q:'Сколько мочи вмещает мочевой пузырь?', a:'300–500 мл', w:['10–30 мл','1,5 л','3 л']}}
+  ];
+  var BY = {};
+  ORGANS.forEach(function(o){ BY[o.id] = o; });
+
+  var S = {mode:'atlas', sel:'heart', sys:'all', seen:new Set((store.get('vn.seen', []) || []).filter(function(id){ return BY[id]; }))};
+  var G = {on:false, best:store.get('vn.best', 0) || 0};
+  var panel = $('#panel'), stage = $('#stage'), main = $('#main');
+
+  /* подписи на схеме */
+  (function(){
+    var labs = $('#labels');
+    ORGANS.forEach(function(o){
+      var left = o.side === 'L', x = left ? 24 : 276, tx = left ? 18 : 282;
+      labs.insertAdjacentHTML('beforeend',
+        '<g class="lab" data-id="' + o.id + '" style="--c:' + o.color + '"><line x1="' + o.anchor[0] + '" y1="' + o.anchor[1] + '" x2="' + x + '" y2="' + o.ly + '"/><circle cx="' + o.anchor[0] + '" cy="' + o.anchor[1] + '" r="2.8"/><text x="' + tx + '" y="' + (o.ly + 4) + '" text-anchor="' + (left ? 'end' : 'start') + '">' + (o.short || o.name) + '</text></g>');
+    });
+    /* рёбра */
+    var ribs = '';
+    for (var i = 0; i < 7; i++) {
+      var y = 114 + i * 12;
+      ribs += '<path class="bone" d="M150,' + y + ' C128,' + (y - 10) + ' 106,' + (y - 4) + ' 98,' + (y + 26 - i * 2) + '"/>';
+      ribs += '<path class="bone" d="M150,' + y + ' C172,' + (y - 10) + ' 194,' + (y - 4) + ' 202,' + (y + 26 - i * 2) + '"/>';
+    }
+    $('#bones').insertAdjacentHTML('beforeend', ribs);
+  })();
+
+  function shuffle(a){ a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function orgEl(id){ return $('.organ[data-id="' + id + '"]'); }
+  function clearBody(){ $$('.organ,.lab').forEach(function(e){ e.classList.remove('sel','dim','good','bad'); }); }
+
+  /* ---------- Атлас ---------- */
+  function paintAtlas(){
+    clearBody();
+    $$('.organ,.lab').forEach(function(e){
+      var o = BY[e.dataset.id];
+      e.classList.toggle('dim', S.sys !== 'all' && o.sys !== S.sys);
+      e.classList.toggle('sel', e.dataset.id === S.sel);
+    });
+  }
+  function infoCard(o){
+    var s = SYS[o.sys], seen = S.seen.has(o.id);
+    return '<article class="card" style="--c:' + o.color + '">' +
+      '<div class="tag-row"><span class="tag" style="color:' + s.color + '"><i style="background:' + s.color + '"></i>' + s.name + ' система</span>' + (seen ? '<span class="seen">✓ ИЗУЧЕНО</span>' : '') + '</div>' +
+      '<h2>' + o.name + '</h2><div class="lat">' + o.lat + '</div>' +
+      '<div class="lbl">Что делает</div><p>' + o.fn + '</p>' +
+      '<div class="stats">' + o.stats.map(function(p){ return '<div class="stat"><b>' + p[1] + '</b><span>' + p[0] + '</span></div>'; }).join('') + '</div>' +
+      '<div class="fact"><div class="lbl">Интересно</div><p>' + o.fact + '</p></div></article>';
+  }
+  function renderAtlas(){
+    var f = document.activeElement, key = null;
+    if (f && f.dataset && panel.contains(f)) key = f.dataset.sys ? 'sys' + f.dataset.sys : (f.dataset.oid ? 'oid' + f.dataset.oid : null);
+    var o = BY[S.sel], n = S.seen.size, tot = ORGANS.length;
+    var sysChips = '<button class="chip" data-sys="all" aria-pressed="' + (S.sys === 'all') + '">Все системы</button>' +
+      Object.keys(SYS).map(function(k){ return '<button class="chip" style="--c:' + SYS[k].color + '" data-sys="' + k + '" aria-pressed="' + (S.sys === k) + '"><i></i>' + SYS[k].name + '</button>'; }).join('');
+    var orgChips = ORGANS.filter(function(x){ return S.sys === 'all' || x.sys === S.sys; }).map(function(x){
+      return '<button class="chip" style="--c:' + x.color + '" data-oid="' + x.id + '" aria-pressed="' + (x.id === S.sel) + '"><i></i>' + x.name + (S.seen.has(x.id) ? ' <span class="ck">✓</span>' : '') + '</button>';
+    }).join('');
+    panel.innerHTML =
+      '<div class="prog"><span>ИЗУЧЕНО ' + n + ' / ' + tot + '</span><div class="bar"><i style="width:' + (n / tot * 100) + '%"></i></div></div>' +
+      infoCard(o) +
+      '<div class="card"><div class="lbl">Системы органов</div><div class="chips">' + sysChips + '</div>' +
+      '<div class="lbl" style="margin-top:18px">Органы</div><div class="chips">' + orgChips + '</div>' +
+      '<p class="muted" style="margin-top:14px;font-size:13px">Нажмите на орган на схеме или выберите его здесь. Когда изучите все, проверьте себя на вкладке «Игра».</p></div>';
+    if (key) {
+      var t = key.indexOf('sys') === 0 ? $('[data-sys="' + key.slice(3) + '"]', panel) : $('[data-oid="' + key.slice(3) + '"]', panel);
+      if (t) t.focus();
+    }
+  }
+  function select(id){
+    S.sel = id;
+    if (!S.seen.has(id)) { S.seen.add(id); store.set('vn.seen', Array.from(S.seen)); }
+    paintAtlas(); renderAtlas();
+  }
+
+  /* ---------- Игра ---------- */
+  var TYPE = {locate:'Найти на теле', clue:'Узнать орган', system:'Система органов', fact:'Факт'};
+  function heart(full){
+    return '<svg viewBox="0 0 24 22" width="24" height="22" aria-hidden="true"><path d="M12 21C5 15 1 11.5 1 7a5.5 5.5 0 0 1 11-1 5.5 5.5 0 0 1 11 1c0 4.5-4 8-11 14z" fill="' + (full ? 'var(--accent)' : 'none') + '" stroke="' + (full ? 'var(--accent)' : 'var(--muted)') + '" stroke-width="1.6"/></svg>';
+  }
+  function rank(s){
+    if (s < 300) return 'Абитуриент';
+    if (s < 800) return 'Студент-медик';
+    if (s < 1500) return 'Интерн';
+    if (s < 2500) return 'Врач';
+    return 'Профессор анатомии';
+  }
+  function renderStart(){
+    panel.innerHTML =
+      '<div class="card"><div class="lbl">Экзамен</div><h2>Экзамен по анатомии</h2>' +
+      '<p style="margin-top:10px">Находите органы на схеме, узнавайте их по описанию, определяйте системы и отвечайте на вопросы. Каждые пять верных ответов поднимают уровень, а времени на ответ становится меньше.</p>' +
+      '<div class="stats"><div class="stat"><b>4</b><span>типа заданий</span></div><div class="stat"><b>3</b><span>жизни</span></div><div class="stat"><b>3</b><span>подсказки</span></div></div>' +
+      '<div class="row"><button class="btn" id="go">Начать экзамен</button><span class="best">РЕКОРД ' + G.best + '</span></div></div>';
+  }
+  function hud(){
+    return '<div class="hud"><div class="lives" role="img" aria-label="Жизней: ' + G.lives + '">' + [0,1,2].map(function(i){ return heart(i < G.lives); }).join('') + '</div>' +
+      '<div class="m"><span>ОЧКИ</span><b>' + G.score + '</b></div><div class="m"><span>УРОВЕНЬ</span><b>' + G.level + '</b></div><div class="m"><span>СЕРИЯ</span><b>' + G.streak + '</b></div></div>' +
+      '<div class="timer"><i id="tbar"></i></div>';
+  }
+  function mkDeck(){
+    var d = [];
+    ORGANS.forEach(function(o){ ['locate','clue','system','fact'].forEach(function(t){ d.push([o.id, t]); }); });
+    return shuffle(d);
+  }
+  function build(id, type){
+    var o = BY[id], w;
+    if (type === 'locate') return {id:id, type:type, text:'Найдите на теле: ' + o.name, sub:'Нажмите на нужный орган на схеме.', opts:null};
+    if (type === 'clue') {
+      w = shuffle(ORGANS.filter(function(x){ return x.id !== id; })).slice(0, 3);
+      return {id:id, type:type, text:'Какой орган ' + o.clue + '?', opts:shuffle([{t:o.name, ok:true}].concat(w.map(function(x){ return {t:x.name}; })))};
+    }
+    if (type === 'system') {
+      w = shuffle(Object.keys(SYS).filter(function(k){ return k !== o.sys; })).slice(0, 3);
+      return {id:id, type:type, text:'К какой системе относится орган «' + o.name + '»?', opts:shuffle([{t:SYS[o.sys].name, ok:true}].concat(w.map(function(k){ return {t:SYS[k].name}; })))};
+    }
+    return {id:id, type:'fact', text:o.qa.q, opts:shuffle([{t:o.qa.a, ok:true}].concat(o.qa.w.map(function(t){ return {t:t}; })))};
+  }
+  function pickQ(){
+    if (!G.deck.length) G.deck = mkDeck();
+    var i = -1;
+    for (var k = 0; k < G.deck.length; k++) { if (G.deck[k][0] !== G.lastId) { i = k; break; } }
+    if (i < 0) i = 0;
+    var p = G.deck.splice(i, 1)[0];
+    G.lastId = p[0];
+    return build(p[0], p[1]);
+  }
+  function startGame(){
+    clearInterval(G.timer);
+    G.on = true; G.score = 0; G.lives = 3; G.streak = 0; G.correct = 0; G.level = 1; G.hints = 3; G.n = 0; G.deck = []; G.lastId = null;
+    nextQ();
+  }
+  function nextQ(){
+    if (G.lives <= 0) return endGame();
+    G.n++; clearBody();
+    G.q = pickQ(); G.answered = false;
+    renderQ(); startTimer();
+  }
+  function renderQ(){
+    var q = G.q;
+    panel.innerHTML = hud() +
+      '<div class="card"><div class="lbl">' + TYPE[q.type] + ' · вопрос ' + G.n + '</div><h2 class="q">' + q.text + '</h2>' +
+      (q.sub ? '<p class="muted">' + q.sub + '</p>' : '') +
+      (q.opts ? '<div class="opts">' + q.opts.map(function(o, i){ return '<button class="opt" data-i="' + i + '"><kbd>' + (i + 1) + '</kbd><span>' + o.t + '</span></button>'; }).join('') + '</div>' : '') +
+      '<div id="hintnote" class="muted"></div>' +
+      '<div class="row"><button class="btn ghost" id="hint"' + (G.hints ? '' : ' disabled') + '>Подсказка (' + G.hints + ')</button></div>' +
+      '<div id="fb"></div></div>';
+  }
+  function startTimer(){
+    G.timeMax = Math.max(12, 26 - 2 * (G.level - 1));
+    G.timeLeft = G.timeMax;
+    clearInterval(G.timer);
+    G.timer = setInterval(function(){
+      G.timeLeft = Math.max(0, G.timeLeft - 0.1);
+      var b = $('#tbar');
+      if (b) { b.style.width = (G.timeLeft / G.timeMax * 100) + '%'; b.classList.toggle('low', G.timeLeft / G.timeMax < 0.3); }
+      if (G.timeLeft <= 0) answer(false, {timeout:true});
+    }, 100);
+  }
+  function useHint(){
+    if (G.answered || !G.hints || G.q.hinted) return;
+    G.hints--; G.q.hinted = true;
+    var o = BY[G.q.id], note = $('#hintnote');
+    if (G.q.type === 'locate') {
+      $$('.organ').forEach(function(e){ e.classList.toggle('dim', BY[e.dataset.id].sys !== o.sys); });
+      note.textContent = 'Подсказка: орган относится к системе «' + SYS[o.sys].name + '». Остальные органы затемнены.';
+    } else {
+      var wrong = shuffle(G.q.opts.map(function(x, i){ return x.ok ? -1 : i; }).filter(function(i){ return i >= 0; })).slice(0, 2);
+      wrong.forEach(function(i){ var b = $('.opt[data-i="' + i + '"]'); b.disabled = true; b.classList.add('gone'); });
+      note.textContent = 'Подсказка: два неверных ответа убраны.';
+    }
+    var h = $('#hint'); h.textContent = 'Подсказка (' + G.hints + ')'; h.disabled = true;
+  }
+  function chooseOpt(i){
+    if (G.answered || !G.q || !G.q.opts) return;
+    var b = $('.opt[data-i="' + i + '"]');
+    if (!b || b.disabled) return;
+    answer(!!G.q.opts[i].ok, {idx:i});
+  }
+  function answer(ok, info){
+    if (G.answered) return;
+    info = info || {};
+    G.answered = true; clearInterval(G.timer);
+    var o = BY[G.q.id], pts = 0, extra = '';
+    if (ok) {
+      G.streak++; G.correct++;
+      pts = (G.q.hinted ? 50 : 100) + Math.round(G.timeLeft) * 3 + Math.min(G.streak, 5) * 10;
+      G.score += pts;
+      var lv = 1 + Math.floor(G.correct / 5);
+      if (lv > G.level) { G.level = lv; extra = ' Уровень ' + lv + ': времени на ответ станет меньше.'; }
+    } else { G.streak = 0; G.lives--; }
+    $$('.organ').forEach(function(e){ e.classList.remove('dim','sel','good','bad'); });
+    var el = orgEl(o.id);
+    if (el) el.classList.add(ok ? 'good' : 'sel');
+    if (!ok && info.clickedId && orgEl(info.clickedId)) orgEl(info.clickedId).classList.add('bad');
+    var correctText = o.name;
+    if (G.q.opts) {
+      G.q.opts.forEach(function(x, i){
+        var b = $('.opt[data-i="' + i + '"]');
+        b.disabled = true;
+        if (x.ok) { b.classList.add('ok'); correctText = x.t; }
+        else if (info.idx === i) b.classList.add('no');
+      });
+    }
+    $('#hint').disabled = true;
+    var head = ok ? 'Верно!' : (info.timeout ? 'Время вышло.' : 'Не совсем.');
+    var body = ok ? ' +' + pts + ' очков.' : ' Правильный ответ: ' + correctText + '.';
+    $('#fb').innerHTML = '<div class="fb ' + (ok ? 'ok' : 'no') + '"><b>' + head + '</b>' + body + extra + ' ' + o.fact + '</div>' +
+      '<div class="row"><button class="btn" id="next">' + (G.lives > 0 ? 'Дальше →' : 'Итоги →') + '</button></div>';
+    var hd = $('.hud');
+    if (hd) hd.outerHTML = hud().split('<div class="timer">')[0];
+    var nb = $('#next'); if (nb) nb.focus();
+  }
+  function endGame(){
+    clearInterval(G.timer); G.on = false; clearBody();
+    var newBest = G.score > G.best;
+    if (newBest) { G.best = G.score; store.set('vn.best', G.best); }
+    panel.innerHTML =
+      '<div class="card"><div class="lbl">Итоги экзамена</div><div class="rank">Ваш ранг: <em>' + rank(G.score) + '</em></div>' +
+      '<p class="muted">' + (newBest && G.score > 0 ? 'Это ваш новый рекорд.' : 'Лучший результат: ' + G.best + '.') + '</p>' +
+      '<div class="stats"><div class="stat"><b>' + G.score + '</b><span>очков</span></div><div class="stat"><b>' + G.correct + '</b><span>верных ответов</span></div><div class="stat"><b>' + G.level + '</b><span>уровень</span></div></div>' +
+      '<div class="row"><button class="btn" id="again">Играть снова</button><button class="btn ghost" id="toAtlas">Повторить в атласе</button></div></div>';
+  }
+  function stopGame(){ clearInterval(G.timer); G.on = false; }
+
+  /* ---------- Переключение режимов ---------- */
+  function setMode(m){
+    if (S.mode === m) return;
+    S.mode = m; stopGame();
+    $('#tab-atlas').setAttribute('aria-selected', m === 'atlas');
+    $('#tab-game').setAttribute('aria-selected', m === 'game');
+    main.classList.toggle('game', m === 'game');
+    stage.classList.toggle('nolabels', m === 'game');
+    if (m === 'atlas') { paintAtlas(); renderAtlas(); } else { clearBody(); renderStart(); }
+  }
+  $('#tab-atlas').addEventListener('click', function(){ setMode('atlas'); });
+  $('#tab-game').addEventListener('click', function(){ setMode('game'); });
+
+  function activate(id){
+    if (S.mode === 'atlas') { select(id); return; }
+    if (G.on && G.q && G.q.type === 'locate' && !G.answered) answer(id === G.q.id, {clickedId:id});
+  }
+  var svg = $('#body');
+  svg.addEventListener('click', function(e){
+    var t = e.target.closest('.organ,.lab');
+    if (t) activate(t.dataset.id);
+  });
+  svg.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var t = e.target.closest('.organ');
+    if (t) { e.preventDefault(); activate(t.dataset.id); }
+  });
+  panel.addEventListener('click', function(e){
+    var t = e.target.closest('button');
+    if (!t) return;
+    if (t.dataset.sys) { S.sys = t.dataset.sys; paintAtlas(); renderAtlas(); return; }
+    if (t.dataset.oid) { select(t.dataset.oid); return; }
+    if (t.id === 'go' || t.id === 'again') { startGame(); return; }
+    if (t.id === 'toAtlas') { S.mode = 'game'; setMode('atlas'); return; }
+    if (t.classList.contains('opt')) { chooseOpt(+t.dataset.i); return; }
+    if (t.id === 'hint') { useHint(); return; }
+    if (t.id === 'next') { nextQ(); return; }
+  });
+  document.addEventListener('keydown', function(e){
+    if (S.mode !== 'game' || !G.on || !G.q) return;
+    if (/^[1-4]$/.test(e.key) && !G.answered && G.q.opts) { chooseOpt(+e.key - 1); return; }
+    if (e.key === 'Enter' && G.answered && document.activeElement && document.activeElement.tagName !== 'BUTTON') {
+      var n = $('#next'); if (n) n.click();
+    }
+  });
+
+  paintAtlas();
+  renderAtlas();
+})();
+</script>
+
+</body>
+</html>
